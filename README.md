@@ -1,176 +1,309 @@
-# Azure Real-Time Speech Recognition
+# Speech Recognition with Diarization Project
 
-This project implements real-time speech recognition using Azure Cognitive Services Speech SDK. It provides two different approaches for capturing audio and performing speech recognition with console output.
+A Python-based speech recognition system that combines Azure Cognitive Services Speech SDK with speaker diarization capabilities. This project demonstrates how to implement real-time speech transcription with speaker identification.
 
-## Features
+## 🎯 Project Overview
 
-- Real-time speech recognition using Azure Cognitive Services
-- Continuous recognition with intermediate results
-- Console output with timestamps
-- Support for multiple languages
-- Error handling and logging
-- Two implementation approaches:
-  - **Simple**: Uses Azure's built-in microphone support
-  - **Advanced**: Custom audio processing with sounddevice
+This project consists of two main components:
+1. **Voice Registration System** - Records and stores speaker profiles
+2. **Speaker Identification System** - Performs real-time transcription with speaker mapping
 
-## Prerequisites
+## ⚠️ Important Notice: Azure Speaker Recognition Limitations
 
-1. **Azure Speech Service**: You need an Azure Speech Service resource
-   - Go to [Azure Portal](https://portal.azure.com)
-   - Create a new Speech Service resource
-   - Note down your **Key** and **Region**
+**As of June 2024, Azure Speaker Recognition is a Limited Access feature with paused registrations.**
 
-2. **Python 3.7+**: Make sure you have Python installed
+- Microsoft has paused all new registrations for the Speaker Recognition Limited Access program
+- This affects the ability to use Azure's official Speaker Recognition API for voice profile creation
+- The project currently uses a hybrid approach combining Azure's diarization with local profile mapping
 
-3. **Microphone**: A working microphone for audio input
+## 🏗️ Architecture
 
-## Installation
+### Current Implementation (Hybrid Approach)
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Voice         │    │   Azure Speech   │    │   Speaker       │
+│ Registration    │───▶│   SDK            │───▶│ Identification  │
+│ (Local)         │    │   (Diarization)  │    │ (Local Mapping) │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+```
 
-1. **Clone or download this project**
+### Components
 
-2. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
+1. **`voice_registration.py`** - Voice profile creation and management
+2. **`speaker_identification.py`** - Real-time transcription with speaker mapping
+3. **`speaker_profiles.json`** - Local storage for speaker profiles
+4. **`continuos_speech_recognition.py`** - Basic speech recognition (reference)
 
-3. **Set up environment variables**:
-   - Copy `env_example.txt` to `.env`
-   - Fill in your Azure credentials:
-   ```
-   AZURE_SPEECH_KEY=your_azure_speech_key_here
-   AZURE_SPEECH_REGION=your_azure_region_here
-   ```
+## 🚀 Features
 
-## Usage
+### ✅ Implemented Features
+- **Real-time speech transcription** using Azure Speech SDK
+- **Speaker diarization** - identifies different speakers in conversation
+- **Local voice profile management** - create, list, and delete speaker profiles
+- **Microphone recording** for voice enrollment (30-second sessions)
+- **Speaker mapping** - maps Azure speaker IDs to user-defined names
+- **Multiple input sources** - microphone and audio files
 
-### Simple Implementation (Recommended for beginners)
+### 🔄 Current Limitations
+- **No Azure Speaker Recognition API** - limited to local profile mapping
+- **Simple speaker assignment** - first detected speaker gets first profile
+- **No voice verification** - profiles are not validated against actual voice characteristics
 
-This version uses Azure's built-in microphone support and is easier to set up:
+## 📋 Prerequisites
 
+### Required Software
+- Python 3.7+
+- Azure Cognitive Services Speech SDK
+- Audio recording capabilities
+
+### Required Dependencies
+```
+azure-cognitiveservices-speech==1.34.0
+sounddevice==0.4.6
+soundfile==0.12.1
+python-dotenv==1.0.0
+requests==2.31.0
+```
+
+### Azure Setup
+1. **Azure Speech Service** - Required for transcription and diarization
+2. **Environment Variables** - Set up `.env` file with Azure credentials
+
+## 🛠️ Installation
+
+### 1. Clone the Repository
 ```bash
-python simple_speech_recognition.py
+git clone <repository-url>
+cd speech_recognition_diarization
 ```
 
-### Advanced Implementation
-
-This version provides more control over audio processing:
-
+### 2. Install Dependencies
 ```bash
-python real_time_speech_recognition.py
+pip install -r requirements.txt
 ```
 
-### Output Example
-
-```
-Azure Real-Time Speech Recognition
-==========================================
-Starting real-time speech recognition...
-Press Ctrl+C to stop
---------------------------------------------------
-Speech recognition session started
-Recognizing: Hello world
-[14:30:25] Recognized: Hello world
-Recognizing: This is a test
-[14:30:28] Recognized: This is a test
-```
-
-## Configuration Options
-
-You can customize the behavior by modifying the `.env` file:
-
+### 3. Configure Environment
+Create a `.env` file with your Azure credentials:
 ```env
-# Azure Speech Service Configuration
-AZURE_SPEECH_KEY=your_key_here
-AZURE_SPEECH_REGION=your_region_here
-
-# Optional: Custom endpoint for custom speech models
-AZURE_SPEECH_ENDPOINT=https://your-custom-endpoint.cognitiveservices.azure.com/
-
-# Audio Configuration (for advanced implementation)
-AUDIO_SAMPLE_RATE=16000
-AUDIO_CHANNELS=1
-AUDIO_CHUNK_SIZE=1024
+AZURE_SPEECH_KEY=your_azure_speech_key_here
+AZURE_SPEECH_REGION=your_azure_region_here
+# Optional: AZURE_SPEECH_ENDPOINT=your_custom_endpoint_here
 ```
 
-## Language Support
+### 4. Windows-Specific Setup
+For Windows users, follow the installation guide in `WINDOWS_INSTALL.md`.
 
-To change the recognition language, modify the `speech_recognition_language` in the code:
+## 📖 Usage Guide
 
+### Step 1: Create Voice Profiles
+```bash
+python voice_registration.py
+```
+
+**Process:**
+1. Choose option 1: "Create new speaker profile"
+2. Enter speaker name (e.g., "David")
+3. Read the provided enrollment text for 30 seconds
+4. Profile is saved locally with a unique ID
+
+**Enrollment Text:**
+```
+The quick brown fox jumps over the lazy dog. This pangram contains every letter of the English alphabet at least once.
+
+Voice recognition technology has advanced significantly in recent years, making it possible to identify speakers with remarkable accuracy.
+
+When creating a voice profile, it's important to speak clearly and at a natural pace. The system will analyze various characteristics of your voice including pitch, tone, and speech patterns.
+
+This enrollment process typically takes about thirty seconds to complete. Please continue reading until the recording stops automatically.
+
+Thank you for participating in this voice enrollment session.
+```
+
+### Step 2: Perform Speaker Identification
+```bash
+python speaker_identification.py
+```
+
+**Options:**
+1. **List profiles** - View all registered speakers
+2. **Transcribe file** - Process audio files with speaker identification
+3. **Real-time transcription** - Live microphone transcription with speaker mapping
+
+### Step 3: Real-time Usage
+1. Choose option 3 for real-time transcription
+2. Speak naturally - the system will:
+   - Transcribe your speech in real-time
+   - Identify you as the first registered speaker
+   - Show intermediate and final results
+
+## 🔧 Technical Details
+
+### Speaker Mapping Logic
 ```python
-self.speech_config.speech_recognition_language = "en-US"  # English
-self.speech_config.speech_recognition_language = "es-ES"  # Spanish
-self.speech_config.speech_recognition_language = "fr-FR"  # French
-# ... and many more
+def get_speaker_name(self, speaker_id):
+    # First speaker detected → First profile in list
+    # Second speaker detected → Second profile (if available)
+    # Additional speakers → "Guest X" naming
 ```
 
-## Troubleshooting
+### Profile Storage Format
+```json
+{
+  "profile_id": {
+    "name": "David",
+    "profile_id": "uuid-string",
+    "created_date": "2024-01-01T12:00:00",
+    "audio_file": "temp_enrollment_david.wav",
+    "enrollment_status": "Ready",
+    "enrollments_count": 1,
+    "speech_length_sec": 30.0,
+    "remaining_speech_sec": 0.0
+  }
+}
+```
+
+### Azure Speech SDK Configuration
+- **Language**: English (en-US)
+- **Service**: ConversationTranscriber for diarization
+- **Audio**: 16kHz, 16-bit PCM format
+
+## 🔮 Future Enhancements
+
+### When Azure Speaker Recognition Becomes Available
+1. **True Voice Verification** - Use Azure's Speaker Recognition API
+2. **Voice Print Creation** - Generate actual voice biometrics
+3. **Multi-Speaker Enrollment** - Support for multiple voice samples per speaker
+4. **Confidence Scoring** - Speaker identification confidence levels
+
+### Alternative Approaches
+1. **Local Voice Recognition** - Implement local speaker identification
+2. **Machine Learning Models** - Train custom speaker identification models
+3. **Voice Activity Detection** - Improve speaker segmentation
+4. **Multi-Modal Identification** - Combine voice with other biometrics
+
+## 🐛 Troubleshooting
 
 ### Common Issues
 
-1. **"No module named 'azure.cognitiveservices.speech'"**
-   - Run: `pip install azure-cognitiveservices-speech`
+#### 1. Audio Recording Problems
+```bash
+# Windows: Install Visual C++ Build Tools
+# Linux: Install portaudio
+sudo apt-get install portaudio19-dev
+```
 
-2. **"No module named 'sounddevice'"**
-   - Run: `pip install sounddevice`
+#### 2. Azure Authentication Errors
+- Verify `.env` file contains correct credentials
+- Check Azure Speech Service is active
+- Ensure region/endpoint configuration is correct
 
-3. **"Azure Speech Key and Region must be set"**
-   - Make sure your `.env` file exists and contains the correct credentials
+#### 3. Speaker Not Recognized
+- Ensure profile was created successfully
+- Check `speaker_profiles.json` exists and contains data
+- Verify microphone permissions
 
-4. **"No speech could be recognized"**
-   - Check your microphone permissions
-   - Ensure your microphone is working
-   - Try speaking louder or more clearly
+#### 4. Transcription Quality Issues
+- Use high-quality microphone
+- Ensure quiet environment
+- Speak clearly and at normal pace
+- Check internet connection for Azure services
 
-5. **Audio quality issues**
-   - Adjust the `AUDIO_SAMPLE_RATE` in your `.env` file
-   - Try different `AUDIO_CHUNK_SIZE` values
+### Debug Information
+The system provides debug output showing:
+- Speaker ID mapping process
+- Profile loading status
+- Azure service connection status
 
-### Windows-specific Issues
+## 📊 Performance Considerations
 
-1. **PyAudio installation problems**:
-   ```bash
-   pip install pipwin
-   pipwin install pyaudio
-   ```
+### Current Limitations
+- **Speaker Assignment**: Simple sequential mapping
+- **Voice Quality**: Depends on recording environment
+- **Real-time Latency**: Network-dependent for Azure services
 
-2. **Microphone permissions**:
-   - Go to Windows Settings > Privacy > Microphone
-   - Ensure your app has microphone access
+### Optimization Tips
+- Use wired microphone for better audio quality
+- Ensure stable internet connection
+- Close unnecessary applications during recording
+- Use quiet environment for voice enrollment
 
-### macOS-specific Issues
+## 🔒 Privacy and Security
 
-1. **Microphone permissions**:
-   - Go to System Preferences > Security & Privacy > Privacy > Microphone
-   - Add your terminal/IDE to the allowed apps
+### Data Storage
+- **Local Storage**: All profiles stored locally in `speaker_profiles.json`
+- **Audio Files**: Temporary enrollment files (can be deleted)
+- **No Cloud Storage**: Voice data not uploaded to external services
 
-## Advanced Features
+### Best Practices
+- Regularly delete temporary audio files
+- Secure your `.env` file with Azure credentials
+- Be aware of microphone permissions
+- Consider data retention policies
 
-### Custom Speech Models
+## 📚 API Reference
 
-If you have a custom speech model, you can use it by setting the `AZURE_SPEECH_ENDPOINT` in your `.env` file.
+### VoiceRegistration Class
+```python
+class VoiceRegistration:
+    def create_speaker_profile(name)      # Create new voice profile
+    def list_profiles()                   # List all profiles
+    def delete_profile(profile_id)        # Delete specific profile
+    def get_profile_by_name(name)         # Find profile by name
+```
 
-### Logging
+### SpeakerIdentification Class
+```python
+class SpeakerIdentification:
+    def transcribe_microphone()           # Real-time transcription
+    def transcribe_file(audio_file)       # File transcription
+    def list_profiles()                   # List available profiles
+    def get_speaker_name(speaker_id)      # Map speaker ID to name
+```
 
-The application creates a `speech_log.txt` file with detailed Azure Speech Service logs for debugging.
+## 🤝 Contributing
 
-### Error Handling
+### Development Setup
+1. Fork the repository
+2. Create feature branch
+3. Implement changes
+4. Test thoroughly
+5. Submit pull request
 
-The application includes comprehensive error handling for:
-- Network connectivity issues
-- Invalid credentials
-- Audio device problems
-- Recognition errors
+### Testing
+- Test with different audio qualities
+- Verify speaker mapping accuracy
+- Check error handling
+- Validate Azure service integration
 
-## Security Notes
+## 📄 License
 
-- Never commit your `.env` file to version control
-- Keep your Azure Speech Service key secure
-- Consider using Azure Key Vault for production applications
+This project is provided as-is for educational and demonstration purposes.
 
-## Contributing
+## 📞 Support
 
-Feel free to submit issues and enhancement requests!
+### Getting Help
+- Check troubleshooting section above
+- Review Azure Speech Service documentation
+- Verify environment configuration
 
-## License
+### Azure Support
+- [Azure Speech Service Documentation](https://docs.microsoft.com/en-us/azure/cognitive-services/speech-service/)
+- [Speaker Recognition FAQ](https://docs.microsoft.com/en-us/azure/cognitive-services/speech-service/speaker-recognition-overview)
 
-This project is open source and available under the MIT License.
+## 🔄 Version History
+
+### v1.0.0 (Current)
+- Basic speech recognition with diarization
+- Local voice profile management
+- Real-time transcription capabilities
+- Hybrid speaker mapping system
+
+### Planned Features
+- Enhanced speaker identification algorithms
+- Multi-language support
+- Improved audio processing
+- Better error handling and recovery
+
+---
+
+**Note**: This project demonstrates the current state of speech recognition technology and the challenges of implementing speaker identification without access to specialized APIs. It serves as a foundation for future development when Azure Speaker Recognition becomes more widely available.
